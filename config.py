@@ -41,9 +41,6 @@ class ConfigItem(abc.ABC):
         self._children.clear()
         self._has_changed()
 
-    def copy(self):
-        return self.to_json().copy()
-
     @abc.abstractmethod
     def to_json(self):
         assert False
@@ -280,9 +277,6 @@ class ConfigFile:
     def clear(self):
         self._head.clear()
         self._has_changed()
-
-    def copy(self):
-        return self._head.copy()
 
     def get_path(self):
         return PurePath(self._path)
