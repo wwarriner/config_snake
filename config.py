@@ -219,16 +219,20 @@ class ConfigFile:
     AUTOSAVE_CALLBACK = lambda x: x.save()
 
     # Raises OSError
-    def __init__(self, path=None, schema=None):
+    def __init__(self, config_path=None, schema_path=None):
         head = ConfigDict(self, {})
-        if path is not None:
-            with open(str(path), mode="r") as f:
+        schema = None
+        if schema_path is not None:
+            with open(str(schema_path), mode="r") as f:
+                schema = json.load(f)
+        if config_path is not None:
+            with open(str(config_path), mode="r") as f:
                 data = json.load(f)
-            if schema is not None:
-                self._validate(data, schema)
+                if schema is not None:
+                    self._validate(data, schema)
             head = _to_config(self, data)
         self._head = head
-        self._path = path
+        self._path = config_path
         self._schema = schema
         self._allow_overwrite = False
         self._on_change_callbacks = {}

@@ -1,7 +1,8 @@
 import unittest
 import json
 from pathlib import PurePath, Path
-from typing import Union
+
+import jsonschema
 
 from config import ConfigFile
 
@@ -18,6 +19,7 @@ class TestConfigFile(unittest.TestCase):
             self.init_json = json.load(f)
 
         self.save_path = self._prep_path(PurePath("save.json"))
+        self.schema_path = self._prep_path(PurePath("test.schema.json"))
 
         self.new_key = "zzz"
         self.new_data = {"foo": "bar", "baz": ["qux"]}
@@ -29,7 +31,7 @@ class TestConfigFile(unittest.TestCase):
         self.list_copy_key = "list_config_copy"
         self.nested_key = "nested_dict_config"
 
-    def _prep_path(self, path: Union[PurePath, Path]):
+    def _prep_path(self, path):
         t = type(path)
         return t(self.root_path) / path
 
@@ -142,6 +144,25 @@ class TestConfigFile(unittest.TestCase):
         self.init_config.on_change_callbacks = {"test": callback}
         self.init_config[self.new_key] = self.new_data
         self.assertTrue(check[key])
+
+    def test_CF_schema(self):
+        try:
+            schema_config = ConfigFile(self.init_path, self.schema_path)
+        except jsonschema.ValidationError as e:
+            self.fail()
+
+        assert not Path(self.save_path).is_file()
+        try:
+            schema_config.set_path(self.save_path)
+            schema_config.overwrite_off()
+            schema_config.save()
+            schema_config[self.new_key] = self.new_data
+            schema_config.save()
+        except jsonschema.ValidationError as e:
+            self.fail()
+        finally:
+            if Path(self.save_path).is_file():
+                Path(self.save_path).unlink()
 
     def test_CF_setitem(self):
         self.init_config[self.new_key] = self.new_data
