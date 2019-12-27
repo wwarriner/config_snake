@@ -40,10 +40,6 @@ class TestConfigFile(unittest.TestCase):
     def test_CF_contains(self):
         self.assertTrue(self.list_key in self.init_config)
 
-    def test_CF_copy(self):
-        copied = self.init_config.copy()
-        self.assertEqual(copied, self.init_json)
-
     def test_CF_delitem(self):
         del self.init_config[self.list_key]
         self.assertFalse(self.list_key in self.init_config)
@@ -136,14 +132,14 @@ class TestConfigFile(unittest.TestCase):
             if Path(self.save_path).is_file():
                 Path(self.save_path).unlink()
 
-    def test_CF_set_on_change_callback(self):
+    def test_CF_on_change_callback(self):
         key = "done"
         check = {key: False}
 
         def callback(x):
             check[key] = True
 
-        self.init_config.set_on_change_callback(callback)
+        self.init_config.on_change_callbacks = {"test": callback}
         self.init_config[self.new_key] = self.new_data
         self.assertTrue(check[key])
 
@@ -186,11 +182,6 @@ class TestConfigFile(unittest.TestCase):
         setattr(self.init_config, self.new_key, self.new_data)
         value = self.init_config[self.new_key]
         self.assertEqual(value, self.new_data)
-
-    def test_CL_copy(self):
-        self.assertEqual(
-            self.init_config[self.list_key].copy(), self.init_json[self.list_key]
-        )
 
     def test_CL_count(self):
         exists = self.init_config[self.list_key][0]
@@ -253,10 +244,10 @@ class TestConfigFile(unittest.TestCase):
         self.assertNotEqual(self.init_config[self.list_key], None)
 
     def test_CL_pop(self):
-        original = self.init_config[self.list_key].copy()
+        original = self.init_config[self.list_key].to_json()
         popped = self.init_config[self.list_key].pop()
         self.assertEqual(popped, original[-1])
-        original = self.init_config[self.list_copy_key].copy()
+        original = self.init_config[self.list_copy_key].to_json()
         popped = self.init_config[self.list_copy_key].pop(0)
         self.assertEqual(popped, original[0])
 
@@ -299,18 +290,13 @@ class TestConfigFile(unittest.TestCase):
         not_exists = ""
         self.assertFalse(not_exists in self.init_config[self.dict_key])
 
-    def test_CD_copy(self):
-        self.assertEqual(
-            self.init_config[self.dict_key].copy(), self.init_json[self.dict_key]
-        )
-
     def test_CD_delitem(self):
         key = list(self.init_config[self.dict_key].keys())[0]
         del self.init_config[self.dict_key][key]
         self.assertFalse(key in self.init_config[self.list_key])
 
     def test_CD_eq(self):
-        copy = self.init_config[self.dict_key].copy()
+        copy = self.init_config[self.dict_key].to_json()
         self.assertEqual(copy, self.init_config[self.dict_key])
 
     def test_CD_fromkeys(self):
@@ -397,7 +383,7 @@ class TestConfigFile(unittest.TestCase):
         self.assertEqual(self.init_config[self.dict_key][self.new_key], self.new_data)
 
     def test_CD_update(self):
-        check = self.init_config[self.dict_key].copy()
+        check = self.init_config[self.dict_key].to_json()
         check.update({self.new_key: self.new_data})
         self.init_config[self.dict_key].update({self.new_key: self.new_data})
         self.assertEqual(self.init_config[self.dict_key], check)
