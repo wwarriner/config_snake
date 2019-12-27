@@ -1,6 +1,9 @@
 import abc
 import json
 from pathlib import Path, PurePath
+from typing import Any, Callable, Dict
+
+import jsonschema
 
 
 class ConfigItem(abc.ABC):
@@ -216,14 +219,17 @@ class ConfigFile:
     AUTOSAVE_CALLBACK = lambda x: x.save()
 
     # Raises OSError
-    def __init__(self, path=None):
+    def __init__(self, path=None, schema=None):
         head = ConfigDict(self, {})
         if path is not None:
             with open(str(path), mode="r") as f:
                 data = json.load(f)
+            if schema is not None:
+                self._validate(data, schema)
             head = _to_config(self, data)
         self._head = head
         self._path = path
+        self._schema = schema
         self._allow_overwrite = False
         self._on_change_callbacks = {}
 
@@ -310,12 +316,12 @@ class ConfigFile:
         self._allow_overwrite = True
 
     def save(self):
-        if self._allow_overwrite or not Path(self.get_path()).is_file():
-            with open(str(self.get_path()), mode="w") as f:
+        path = self._path
+        if path is None:
+            return
+        if self._allow_overwrite or not Path(path).is_file():
+            with open(str(path), mode="w") as f:
                 json.dump(self.to_json(), f)
-
-    def set_on_change_callback(self, callback):
-        self._on_change_callback = callback
 
     def set_path(self, path):
         self._path = PurePath(path)
@@ -324,5 +330,11 @@ class ConfigFile:
         return _from_config(self._head)
 
     def _has_changed(self):
+        if self._schema is not None:
+            self._validate(self.to_json(), self._schema)
         for callback in self.on_change_callbacks.values():
             callback(self)
+
+    @staticmethod
+    def _validate(json, schema):
+        jsonschema.validate(json, schema)
