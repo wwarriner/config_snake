@@ -13,6 +13,7 @@ class ConfigItem(abc.ABC):
 
     def __delitem__(self, key):
         del self._children[key]
+        self._has_changed()
 
     @abc.abstractmethod
     def __eq__(self, other):
