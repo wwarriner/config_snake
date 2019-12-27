@@ -225,7 +225,7 @@ class ConfigFile:
         self._head = head
         self._path = path
         self._allow_overwrite = False
-        self._on_change_callback = lambda *args, **kwargs: None
+        self._on_change_callbacks = {}
 
     def __contains__(self, key):
         return self._head.__contains__(key)
@@ -251,7 +251,14 @@ class ConfigFile:
         return self._head[key]
 
     def __setattr__(self, key, value):
-        if key in ("_head", "_path", "_allow_overwrite", "_on_change_callback"):
+        if key in (
+            "_head",
+            "_path",
+            "_allow_overwrite",
+            "_schema",
+            "_on_change_callbacks",
+            "on_change_callbacks",
+        ):
             super().__setattr__(key, value)
         else:
             self.__setitem__(key, value)
@@ -273,6 +280,14 @@ class ConfigFile:
 
     def __str__(self):
         return self.to_json().__str__()
+
+    @property
+    def on_change_callbacks(self):
+        return self._on_change_callbacks
+
+    @on_change_callbacks.setter
+    def on_change_callbacks(self, value: Dict[Any, Callable[["ConfigFile"], None]]):
+        self._on_change_callbacks = value
 
     def clear(self):
         self._head.clear()
@@ -309,7 +324,5 @@ class ConfigFile:
         return _from_config(self._head)
 
     def _has_changed(self):
-        if self._on_change_callback is None:
-            pass
-        else:
-            self._on_change_callback(self)
+        for callback in self.on_change_callbacks.values():
+            callback(self)
