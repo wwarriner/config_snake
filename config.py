@@ -71,6 +71,16 @@ class ConfigFile:
             "_schema",
             "_allow_overwrite",
             "_on_change_callbacks",
+            "overwrite",
+            "path",
+            "on_change_callbacks",
+            "clear",
+            "overwrite_off",
+            "overwrite_on",
+            "save",
+            "to_json",
+            "_has_changed",
+            "_validate",
         ):
             return super().__getattr__(key)
         if self.__contains__(key):
@@ -89,6 +99,16 @@ class ConfigFile:
             "_schema",
             "_allow_overwrite",
             "_on_change_callbacks",
+            "overwrite",
+            "path",
+            "on_change_callbacks",
+            "clear",
+            "overwrite_off",
+            "overwrite_on",
+            "save",
+            "to_json",
+            "_has_changed",
+            "_validate",
         ):
             super().__setattr__(key, value)
         else:
