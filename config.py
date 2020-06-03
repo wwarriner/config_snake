@@ -66,6 +66,14 @@ class ConfigFile:
             return False
 
     def __getattr__(self, key):
+        if key in (
+            "_head",
+            "_path",
+            "_schema",
+            "_allow_overwrite",
+            "_on_change_callbacks",
+        ):
+            return super().__getattr__(key)
         if self.__contains__(key):
             return self.__getitem__(key)
         else:
@@ -82,9 +90,6 @@ class ConfigFile:
             "_schema",
             "_allow_overwrite",
             "_on_change_callbacks",
-            "overwrite",
-            "path",
-            "on_change_callbacks",
         ):
             super().__setattr__(key, value)
         else:
@@ -292,7 +297,9 @@ class ConfigDict(ConfigItem):
             return False
 
     def __getattr__(self, key):
-        if self.__contains__(key):
+        if key in ("_children", "_parent"):
+            super().__getattr__(key)
+        elif self.__contains__(key):
             return self.__getitem__(key)
         else:
             raise AttributeError()
