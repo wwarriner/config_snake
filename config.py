@@ -34,18 +34,17 @@ class ConfigFile:
 
     # Raises OSError
     def __init__(self, config_path=None, schema_path=None):
-        head = ConfigDict(self, {})
+        data = {}
+        if config_path is not None:
+            with open(str(config_path), mode="r") as f:
+                data = json.load(f)
         schema = None
         if schema_path is not None:
             with open(str(schema_path), mode="r") as f:
                 schema = json.load(f)
-        if config_path is not None:
-            with open(str(config_path), mode="r") as f:
-                data = json.load(f)
-                if schema is not None:
-                    self._validate(data, schema)
-            head = _to_config(self, data)
-        self._head = head
+        if schema is not None:
+            self._validate(data, schema)
+        self._head = _to_config(self, data)
         self._path = config_path
         self._schema = schema
         self._allow_overwrite = False
